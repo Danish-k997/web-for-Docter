@@ -1,56 +1,88 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+
 const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const navlinks = [
+    { name: "Home", href: "/" },
+    { name: "Expertise", href: "#" },
+    { name: "Schedule", href: "#" },
+    { name: "Clinic", href: "#" },
+    { name: "Contact", href: "#" },
+  ];
+
   return (
-    <header className="w-full sticky top-0 z-50 bg-black/95 backdrop-blur-sm px-3 py-3 text-white shadow-lg sm:px-4 md:px-8">
-      <nav className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 md:flex-nowrap md:gap-4">
-        <h1 className="text-2xl font-baloo font-extrabold leading-none tracking-tight sm:text-3xl">
-          Food<span className="text-[#ff6a00]">Rush</span>
-        </h1>
+    <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
+      {/* Container: Restricted width for large screens (Standard Practice) */}
+      <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-6 md:px-12">
+        
+        {/* Logo */}
+        <Link to="/" className="shrink-0 font-bold text-xl md:text-2xl text-teal-900">
+          Dr. Ayushi Sinha
+        </Link>
 
-        <button className="order-3 flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-[#171717] px-4 py-2 text-sm text-white/90 shadow-sm md:order-none md:w-auto">
-          <svg className="h-4 w-4 text-[#ff6a00]" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C8.14 2 5 5.14 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.86-3.14-7-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z" />
-          </svg>
-          <span>Patna, Bihar</span>
-          <svg className="h-4 w-4 text-white/60" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 10l5 5 5-5z" />
-          </svg>
-        </button>
+        {/* Desktop Navigation */}
+        <nav aria-label="Desktop Navigation" className="hidden md:block">
+          <ul className="flex gap-8 items-center text-gray-700 font-medium">
+            {navlinks.map((link) => (
+              <li key={link.name}>
+                <a href={link.href} className="hover:text-teal-600 transition-all duration-300">
+                  {link.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-        <div className="order-4 relative w-full md:order-none md:block md:flex-1">
-          <svg
-            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+        {/* Desktop CTA (Call to Action) */}
+        <div className="hidden md:block">
+          <Link
+            to="/signup"
+            className="bg-[#004d40] text-white px-7 py-2.5 rounded-full font-semibold hover:bg-teal-800 hover:shadow-lg transition-all"
           >
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
-          <input
-            type="search"
-            placeholder="Search resturants, dishes, cuisines..."
-            className="h-11 w-full rounded-full border border-white/10 bg-[#171717] pl-11 pr-4 text-sm text-white placeholder:text-white/45 outline-none transition focus:border-[#ff6a00]/70"
-          />
+            Sign Up
+          </Link>
         </div>
 
-        <button className="relative flex items-center gap-2 rounded-xl bg-[#ff6a00] px-4 py-2 text-sm font-semibold text-white">
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zm1.5 4h9L18 18H6L7.5 6z" />
-          </svg>
-          <span>Cart</span>
-          <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-[#ff6a00]">
-            3
-          </span>
+        {/* Mobile Menu Toggle Button */}
+        <button
+          className="md:hidden p-2 text-teal-900 focus:outline-none"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          <div className="w-6 h-6 flex flex-col justify-around">
+            {/* Industry style custom animated hamburger (optional) or SVG */}
+            <span className={`block h-0.5 w-6 bg-current transform transition duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+            <span className={`block h-0.5 w-6 bg-current transition duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+            <span className={`block h-0.5 w-6 bg-current transform transition duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+          </div>
         </button>
+      </div>
 
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#171717] text-sm font-semibold">
-          A
-        </div>
-      </nav>
+      {/* Mobile Menu - Absolute positioning (Industry Standard to avoid layout shift) */}
+      <div className={`absolute top-full left-0 w-full bg-white border-b shadow-xl transition-all duration-300 ease-in-out transform ${isMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-5 opacity-0 pointer-events-none'} md:hidden`}>
+        <ul className="flex flex-col p-6 gap-4 text-gray-700 font-medium">
+          {navlinks.map((link) => (
+            <li key={link.name} className="border-b border-gray-50 pb-2">
+              <a href={link.href} onClick={() => setIsMenuOpen(false)} className="block text-lg">
+                {link.name}
+              </a>
+            </li>
+          ))}
+          <li className="pt-2">
+            <Link
+              to="/signup"
+              onClick={() => setIsMenuOpen(false)}
+              className="block text-center bg-[#004d40] text-white py-3 rounded-xl font-semibold"
+            >
+              Sign Up
+            </Link>
+          </li>
+        </ul>
+      </div>
     </header>
   );
 };
 
 export default Navbar;
-
