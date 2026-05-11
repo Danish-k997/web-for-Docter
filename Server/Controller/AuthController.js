@@ -7,256 +7,158 @@ import optModel from "../models/OtpModal.js";
 import { generateOtp, getopthtml } from "../Utlis/utlis.js";
 import { Sendemail } from "../Services/email.services.js";
 
-const genrateaccesstoken = (usedId) => {
-  return jwt.sign({ userId: usedId }, process.env.JWT_SECRET, {
-    expiresIn: "15m",
-  });
+// --- HELPERS (Logic Centralization) ---
+
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-const genraterefreshtoken = (usedId) => {
-  return jwt.sign({ userId: usedId }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
+const generateTokens = (userId) => {
+  const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "15m" });
+  const refreshToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  return { accessToken, refreshToken };
 };
 
-export const register = async (req, res) => {
+const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
+
+// --- CONTROLLERS ---
+
+export const register = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
 
   const existingUser = await UserModel.findOne({ email });
-  if (existingUser) {
-    return res.status(400).json({ message: "User already exists" });
-  }
+  if (existingUser) return res.status(400).json({ message: "User already exists" });
 
   const hashedPassword = await bcrypt.hash(password, 10);
-
   const newUser = await UserModel.create({
     username,
     email,
     password: hashedPassword,
   });
 
-  const otp = genreteotp();
+  const otp = generateOtp();
   const html = getopthtml(otp);
-
-  const Haseotp = crypto.createHash("sha256").update(otp).digest("hex");
+  const hashedOtp = hashToken(otp);
 
   await optModel.create({
     email,
     user: newUser._id,
-    Haseotp,
+    Haseotp: hashedOtp,
   });
 
-  await Sendemail(email, "OTP VERIFACTION", `your otp is ${otp}`, html);
+  await Sendemail(email, "OTP VERIFICATION", `Your OTP is ${otp}`, html);
 
-  res.status(200).json({
-    message: "user register successfully",
-    username: newUser.username,
-    email: newUser.email,
-    userverifde: newUser.Verified,
+  res.status(201).json({
+    message: "User registered successfully. Please verify your email.",
+    user: { username: newUser.username, email: newUser.email, verified: newUser.Verified }
   });
-};
+});
 
-export const login = async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await UserModel.findOne({ email });
+  // Industry Standard: Password ko model mein select: false rakhein aur yahan mangwayein
+  const user = await UserModel.findOne({ email }).select("+password");
 
-  if (!user) {
-    return res.status(401).json({ message: "user not found" });
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ message: "Invalid credentials" });
   }
 
   if (!user.Verified) {
-    return res.status(401).json({ message: "user not verified" });
+    return res.status(403).json({ message: "Account not verified. Check your email." });
   }
 
-  const ispasswordvalid = await bcrypt.compare(password, user.password);
+  const { accessToken, refreshToken } = generateTokens(user._id);
+  const hashedRT = hashToken(refreshToken);
 
-  if (!ispasswordvalid) {
-    return res.status(401).json({ message: "invalid password or email" });
-  }
-
-  const refreshtoken = genraterefreshtoken(user._id);
-
-  const haserefreshtoken = crypto
-    .createHash("sha256")
-    .update(refreshtoken)
-    .digest("hex");
-
-  const session = await Sessionmodal.create({
+  await Sessionmodal.create({
     User: user._id,
-    refreshtoken: haserefreshtoken,
+    refreshtoken: hashedRT,
     Ip: req.ip,
     UserAgent: req.headers["user-agent"],
   });
 
-  const accessToken = genrateaccesstoken(user._id);
-
-  res.cookie("refreshToken", refreshtoken, {
+  res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.status(200).json({ message: "login successfully", accessToken });
-};
+  res.status(200).json({ message: "Login successful", accessToken });
+});
 
-export const getme = async (req, res) => {
-  const token = req.headers.authorization.split(" ")[1];
+export const verifyotp = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+  const hashedOtp = hashToken(otp);
 
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized token not found" });
-  }
+  const otpDoc = await optModel.findOne({ email, Haseotp: hashedOtp });
+  if (!otpDoc) return res.status(400).json({ message: "Invalid or expired OTP" });
 
-  const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-  const userId = decodedToken.userId;
+  const user = await UserModel.findByIdAndUpdate(otpDoc.user, { Verified: true }, { new: true });
+  await optModel.deleteMany({ user: otpDoc.user });
 
-  const user = await UserModel.findById(userId);
+  res.status(200).json({ message: "Email verified successfully", verified: user.Verified });
+});
 
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
-  }
-  res.status(201).json({
-    message: "user fetch successfully",
-    user: { username: user.username, email: user.email },
-  });
-};
+export const getme = asyncHandler(async (req, res) => {
+  // Logic: Token decoding middleware mein honi chahiye (protect middleware)
+  // Phir bhi as per your code:
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-export const refreshtoken = async (req, res) => {
-  try {
-    const refreshToken = req.cookies.refreshToken;
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const user = await UserModel.findById(decoded.userId);
 
-    if (!refreshToken) {
-      res.status(401).json({ message: "refresh token not found" });
-    }
+  if (!user) return res.status(404).json({ message: "User not found" });
 
-    const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET);
-    const userId = decodedToken.userId;
+  res.status(200).json({ user: { username: user.username, email: user.email } });
+});
 
-    const haserefreshtoken = crypto
-      .createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
+export const refreshtoken = asyncHandler(async (req, res) => {
+  const oldRefreshToken = req.cookies.refreshToken;
+  if (!oldRefreshToken) return res.status(401).json({ message: "No refresh token" });
 
-    const session = await Sessionmodal.findOne({
-      refreshtoken: haserefreshtoken,
-      revoked: false,
-    });
+  const decoded = jwt.verify(oldRefreshToken, process.env.JWT_SECRET);
+  const hashedOldRT = hashToken(oldRefreshToken);
 
-    if (!session) {
-      return res.status(401).json({ message: "invalid refresh token" });
-    }
+  const session = await Sessionmodal.findOne({ refreshtoken: hashedOldRT, revoked: false });
+  if (!session) return res.status(401).json({ message: "Invalid session" });
 
-    const accesstoken = genrateaccesstoken(userId);
+  const { accessToken, refreshToken: newRefreshToken } = generateTokens(decoded.userId);
+  const hashedNewRT = hashToken(newRefreshToken);
 
-    const refreshtoken = genraterefreshtoken(userId);
-
-    const newhaserefreshtoken = crypto
-      .createHash("sha256")
-      .update(refreshtoken)
-      .digest("hex");
-
-    session.refreshtoken = newhaserefreshtoken;
-    await session.save();
-
-    res.cookie("refreshtoken", refreshtoken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res
-      .status(200)
-      .json({ message: "accesstoken refresh sucessfully", accesstoken });
-  } catch (error) {
-    res.status(401).json({ message: "invalid refresh token" });
-  }
-};
-
-export const logout = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
-
-  if (!refreshToken) {
-    return res.status(401).json({ message: "refresh token not found" });
-  }
-
-  const haserefreshtoken = crypto
-    .createHash("sha256")
-    .update(refreshToken)
-    .digest("hex");
-
-  const session = await Sessionmodal.findOne({
-    refreshtoken: haserefreshtoken,
-    revoked: false,
-  });
-
-  if (!session) {
-    return res.status(401).json({ message: "invalid refresh token" });
-  }
-
-  session.revoked = true;
+  // Token Rotation: Update session with NEW hash
+  session.refreshtoken = hashedNewRT;
   await session.save();
 
-  res.clearCookie("refreshToken");
+  res.cookie("refreshToken", newRefreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 
-  res.status(200).json({ message: "Logout successful" });
-};
+  res.status(200).json({ accessToken });
+});
 
-export const logoutall = async (req, res) => {
+export const logout = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
-
-  if (!refreshToken) {
-    return res.status(401).json({ message: "refresh token not found" });
+  if (refreshToken) {
+    const hashedRT = hashToken(refreshToken);
+    await Sessionmodal.findOneAndUpdate({ refreshtoken: hashedRT }, { revoked: true });
   }
+  res.clearCookie("refreshToken");
+  res.status(200).json({ message: "Logged out successfully" });
+});
 
-  const decode = jwt.verify(refreshToken, process.env.JWT_SECRET);
+export const logoutall = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) return res.status(401).json({ message: "No token found" });
 
-  await Sessionmodal.updateMany(
-    {
-      User: decode.userId,
-      revoked: false,
-    },
-    {
-      revoked: true,
-    },
-  );
+  const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+  await Sessionmodal.updateMany({ User: decoded.userId, revoked: false }, { revoked: true });
 
   res.clearCookie("refreshToken");
-
-  res.status(200).json({ message: "Logout From all devices successful" });
-};
-
-export const verifyotp = async (req, res) => {
-  const { email, otp } = req.body;
-
-  const Haseotp = crypto.createHash("sha256").update(otp).digest("hex");
-
-  const otpDoc = optModel.findOne({
-    email,
-    Haseotp,
-  });
-
-  if (!otpDoc) {
-    return res.status(400).json({
-      message: "Invalid OTP",
-    });
-  }
-
-  const user = await UserModel.findByIdAndUpdate(otpDoc.user, {
-    Verified: true,
-  });
-
-  const deleteotp = await optModel.deleteMany({
-    user: otpDoc.user,
-  });
-
-  return res.status(200).json({
-    message: "email verifaied successfully",
-    user: {
-      username: user.username,
-      email: user.email,
-      Verified: user.Verified,
-    },
-  });
-};
+  res.status(200).json({ message: "Logged out from all devices" });
+});
