@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   getRequestErrorMessage,
   registerUser,
 } from "../../Serveces/apiservices";
-import dotcer from "../../assets/dot.png"
-
+import dotcer from "../../assets/dot.png";
+import { useDispatch } from "react-redux";
+import { setuserId } from "../../redux/authSlice";
+import { toast } from "react-toastify";
 
 type FieldErrors = Partial<Record<"username" | "email" | "password", string>>;
 
@@ -36,12 +38,14 @@ const Singup = () => {
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const inputClass = useMemo(
     () =>
       "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 outline-none transition-shadow focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15 disabled:opacity-60",
-    []
+    [],
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,12 +63,26 @@ const Singup = () => {
         username: username.trim(),
         email: email.trim(),
         password,
-      });
+      }) 
+      console.log(data);
+      
+      const userId = data.userId;
+      console.log(userId);
+      
+      if (!userId) {
+        toast.error("Session expired. Please register again.");
+        navigate("/register");
+        return; // Function yahan ruk jayega
+      }
       setSuccessMessage(data.message);
       setUsername("");
       setEmail("");
       setPassword("");
       setFieldErrors({});
+      dispatch(setuserId(userId));
+      console.log(userId);
+      navigate("/verify-otp");
+      toast.success("register successfully");
     } catch (err) {
       setBannerError(getRequestErrorMessage(err));
     } finally {
@@ -145,7 +163,11 @@ const Singup = () => {
                 </div>
               )}
 
-              <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+              <form
+                className="mt-8 space-y-5"
+                onSubmit={handleSubmit}
+                noValidate
+              >
                 <div>
                   <label htmlFor="signup-username" className="sr-only">
                     Username
@@ -215,7 +237,10 @@ const Singup = () => {
                       onChange={(e) => {
                         setPassword(e.target.value);
                         if (fieldErrors.password)
-                          setFieldErrors((p) => ({ ...p, password: undefined }));
+                          setFieldErrors((p) => ({
+                            ...p,
+                            password: undefined,
+                          }));
                       }}
                       className={`${inputClass} pr-12`}
                       aria-invalid={Boolean(fieldErrors.password)}
@@ -225,7 +250,9 @@ const Singup = () => {
                       type="button"
                       className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
                       onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       disabled={isSubmitting}
                     >
                       {showPassword ? (

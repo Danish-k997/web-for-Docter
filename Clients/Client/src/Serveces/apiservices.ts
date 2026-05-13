@@ -1,16 +1,23 @@
 import { isAxiosError } from "axios";
 import api from "../AxioseApis/api";
+import type {VerifyOtpRequest, VerifyOtpResponse} from "../Utlis/Types"
 
 export interface RegisterData {
   username: string;
   email: string;
   password: string;
-}
+} 
+
 
 export const registerUser = async(Userdate:RegisterData) => {
   const res = await api.post("/auth/register",Userdate)
   return res.data
-} 
+}  
+
+export const verifiyotp = async(data:VerifyOtpRequest) => {
+  const res = await api.post<VerifyOtpResponse>("auth/verifyotp",data)
+  return res.data
+}
 
 
 export function getRequestErrorMessage(error: unknown): string {

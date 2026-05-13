@@ -9,7 +9,7 @@ router.get("/getme", authRouter.getme);
 router.get("/refresh-token", authRouter.refreshtoken)
 router.get("/logout", authRouter.logout)
 router.get("/logoutall", authRouter.logoutall)
-router.post("/verifyotp", authRouter.verifyotp)
+router.post("/verifyotp", authRouter.verifyOTP)
 
 
 export default router;
