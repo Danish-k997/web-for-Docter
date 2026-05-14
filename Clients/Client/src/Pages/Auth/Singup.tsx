@@ -63,26 +63,25 @@ const Singup = () => {
         username: username.trim(),
         email: email.trim(),
         password,
-      }) 
+      });
       console.log(data);
-      
-      const userId = data.userId;
-      console.log(userId);
+
+      const userId = data.user.userId;
       
       if (!userId) {
         toast.error("Session expired. Please register again.");
-        navigate("/register");
+        navigate("/signup");
         return; // Function yahan ruk jayega
       }
+      dispatch(setuserId(userId));
       setSuccessMessage(data.message);
+      toast.success(data.message || "Registered successfully!");
       setUsername("");
       setEmail("");
       setPassword("");
       setFieldErrors({});
-      dispatch(setuserId(userId));
       console.log(userId);
       navigate("/verify-otp");
-      toast.success("register successfully");
     } catch (err) {
       setBannerError(getRequestErrorMessage(err));
     } finally {

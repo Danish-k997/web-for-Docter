@@ -18,6 +18,21 @@ export const verifiyotp = async(data:VerifyOtpRequest) => {
   const res = await api.post<VerifyOtpResponse>("auth/verifyotp",data)
   return res.data
 }
+                                                                                            
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  message: string;
+  accessToken: string;
+}
+
+export const loginUser = async (credentials: LoginCredentials) => {
+  const res = await api.post<LoginResponse>("/auth/login", credentials);
+  return res.data;
+};
 
 
 export function getRequestErrorMessage(error: unknown): string {

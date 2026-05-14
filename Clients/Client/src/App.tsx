@@ -4,10 +4,12 @@ import "./App.css";
 import Navbar from "./Components/SharedCompo/Navbar.tsx";
 import Singup from "./Pages/Auth/Singup.tsx";
 import Otpverifay from "./Pages/Auth/Otpverifay.tsx";
+import Login from "./Pages/Auth/Login.tsx";
 
 function App() {
   const { pathname } = useLocation();
-  const hideNavbar = pathname === "/singup" || pathname === "/login";
+  const hideNavbar =
+    pathname === "/signup" || pathname === "/login" || pathname === "/verify-otp";
 
   return (
     <div className="relative min-h-screen flex flex-col">
@@ -16,8 +18,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<Singup />} />
-          <Route path="verify-otp" element={<Otpverifay/>} />
-          
+          <Route path="/login" element={<Login />} />
+          <Route path="/verify-otp" element={<Otpverifay />} />
         </Routes>
 
       </main>

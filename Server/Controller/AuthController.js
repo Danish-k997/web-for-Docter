@@ -7,6 +7,7 @@ import optModel from "../models/OtpModal.js";
 import { generateOtp, getopthtml } from "../Utlis/utlis.js";
 import { Sendemail } from "../Services/email.services.js";
 
+
 // --- HELPERS (Logic Centralization) ---
 
 const asyncHandler = (fn) => (req, res, next) => {
@@ -41,14 +42,15 @@ export const register = asyncHandler(async (req, res) => {
     email,
     password: hashedPassword,
   });
-
+     
+      
   const otp = generateOtp();
   const html = getopthtml(otp);
   const hashedOtp = hashToken(otp);
-
+      
   await optModel.create({
     email,
-    user: newUser._id,
+    userId: newUser._id,
     Haseotp: hashedOtp,
   });
 
@@ -59,8 +61,8 @@ export const register = asyncHandler(async (req, res) => {
     user: {
       username: newUser.username,
       email: newUser.email,
+      userId: newUser._id,
       verified: newUser.Verified,
-      userId:newUser.userId
     },
   });
 });
@@ -114,7 +116,7 @@ export const verifyOTP = asyncHandler(async (req, res) => {
   const hashedOtp = hashToken(otp);
 
   const otpDoc = await optModel.findOne({
-    user: userId,
+    userId: userId,
     Haseotp: hashedOtp,
     expiresAt: { $gt: new Date() }
   });
@@ -136,7 +138,7 @@ export const verifyOTP = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "User not found" });
   }
 
-  await optModel.deleteMany({ user: userId });
+  await optModel.deleteMany({ userId: userId });
   const { accessToken, refreshToken } = generateTokens(user._id);
   const hashedRT = hashToken(refreshToken);
 

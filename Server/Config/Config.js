@@ -1,41 +1,31 @@
 import dotenv from "dotenv";
 dotenv.config();
+import {z} from "zod";
 
-const config = {
+
+const config = ({
   MONGODB_URL: process.env.MONGODB_URL,
   PORT: process.env.PORT,
   JWT_SECRET: process.env.JWT_SECRET,
-  GOOGEL_CLIENT_ID: process.env.GOOGEL_CLIENT_ID,
-  GOOGEL_CLIENT_SECRET: process.env.GOOGEL_CLIENT_SECRET,
-  GOOGEL_REFRESH_TOKEN: process.env.GOOGEL_REFRESH_TOKEN,
-  GOOGEL_USER:process.env.GOOGEL_USER
-};
+  GOOGEL_USER:process.env.GOOGEL_USER,
+  APP_PASSWORD: process.env.APP_PASSWORD,
+  FORTEND_URL: process.env.FORTEND_URL,
+});
 
-if (!config.MONGODB_URL) {
-  throw new Error("Missing MONGODB_URL environment variable");
+const configSchema = z.object({
+  MONGODB_URL: z.string().url(),
+  PORT: z.string().regex(/^\d+$/).transform(Number),
+  JWT_SECRET: z.string().min(32),
+  GOOGEL_USER: z.string().email(),
+  APP_PASSWORD: z.string(),
+  FORTEND_URL: z.string().url(),
+});
+
+const validation = configSchema.safeParse(config);
+if (!validation.success) {
+  console.error("Configuration validation failed:", validation.error.format());
+  process.exit(1);
 }
-
-if (!config.PORT) {
-  throw new Error("Missing PORT environment variable");
-}
-
-if (!config.JWT_SECRET) {
-  throw new Error("Missing JWT_SECRET environment variable");
-} 
-
-if (!config.GOOGEL_CLIENT_ID) {
-  throw new Error("Missing GOOGEL_CLIENT_ID environment variable");
-  
-}
-if (!config.GOOGEL_CLIENT_SECRET) {
-  throw new Error("Missing GOOGEL_CLIENT_SECRET environment variable");
-} 
-if (!config.GOOGEL_REFRESH_TOKEN) {
-  throw new Error("Missing GOOGEL_REFRESH_TOKEN environment variable");
-} 
-if (!config.GOOGEL_USER) {
-  throw new Error("Missing GOOGEL_USER environment variable");
-} 
 
 
 export default config;
