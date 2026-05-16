@@ -62,6 +62,7 @@ export const register = asyncHandler(async (req, res) => {
       username: newUser.username,
       email: newUser.email,
       userId: newUser._id,
+      role: newUser.role,
       verified: newUser.Verified,
     },
   });
@@ -161,6 +162,7 @@ export const verifyOTP = asyncHandler(async (req, res) => {
     message: "Email verified successfully",
     data: {
       userId: user._id,
+      role: user.role,
       verified: user.Verified,
     },
     accessToken, 
@@ -180,7 +182,7 @@ export const getme = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json({ user: { username: user.username, email: user.email } });
+    .json({ user: { username: user.username, email: user.email, role: user.role } });
 });
 
 export const refreshtoken = asyncHandler(async (req, res) => {
