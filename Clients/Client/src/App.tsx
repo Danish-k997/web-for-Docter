@@ -1,4 +1,8 @@
 import { Route, Routes, useLocation } from "react-router-dom";
+import { checkAuthSession } from "./redux/authSlice.ts";
+import { useEffect } from "react";
+import { UseAppDispatch, UseAppSelector } from "./Serveces/Hook.ts";
+import ProtectedRouter from "./middleware/ProtectedRouter.tsx";
 import Home from "./Pages/Customers/Home.tsx";
 import "./App.css";
 import Navbar from "./Components/SharedCompo/Navbar.tsx";
@@ -6,11 +10,7 @@ import Singup from "./Pages/Auth/Singup.tsx";
 import Otpverifay from "./Pages/Auth/Otpverifay.tsx";
 import Login from "./Pages/Auth/Login.tsx";
 import Myreport from "./Pages/Myreport/Myreport.tsx";
-import { useEffect } from "react";
-import  api  from "./AxioseApis/api.ts";
-import { UseAppDispatch } from "./Serveces/Hook.ts";
-import { setIsAuthenticated, setUser } from "./redux/authSlice.ts";
-
+import Sppiner from "./Components/SharedCompo/Sppiner.tsx";
 
 function App() {
   const { pathname } = useLocation();
@@ -19,26 +19,19 @@ function App() {
     pathname === "/signup" ||
     pathname === "/login" ||
     pathname === "/verify-otp";
+
+  const { isInitialized } = UseAppSelector((state) => state.auth);
+
   useEffect(() => {
-    const authPages = ["/login", "/signup", "/verify-otp"];
-  if (authPages.includes(pathname)) return;
-    const checkAuth = async () => {
-      try {
-        const response = await api.get("/auth/getme");
-
-        if (response.data.authenticated) {
-          dispatch(setIsAuthenticated(true));
-          dispatch(setUser(response.data.user));
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        dispatch(setIsAuthenticated(false));
-      }
-    };
-
-    checkAuth();
-  }, [dispatch, pathname]);
-
+    dispatch(checkAuthSession());
+  }, [dispatch]);
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Sppiner label=" Starting Application..." size="xl" color="#0f766e" fullScreen />
+      </div>
+    );
+  }
   return (
     <div className="relative min-h-screen flex flex-col">
       {!hideNavbar && <Navbar />}
@@ -48,7 +41,9 @@ function App() {
           <Route path="/signup" element={<Singup />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify-otp" element={<Otpverifay />} />
-          <Route path="/myreport" element={<Myreport />} />
+          <Route element={<ProtectedRouter allowedRoles={["user", "admin"]} />}>
+            <Route path="/myreport" element={<Myreport />} />
+          </Route>
         </Routes>
       </main>
       {/* Footer yahan aayega */}

@@ -5,8 +5,7 @@ import { getRequestErrorMessage, loginUser } from "../../Serveces/apiservices";
 import { setAccessToken } from "../../AxioseApis/api";
 import { toast } from "react-toastify";
 import { UseAppDispatch } from "../../Serveces/Hook";
-import { setIsAuthenticated } from "../../redux/authSlice";
-import { setUser } from "../../redux/authSlice";
+import { setCredentials } from "../../redux/authSlice";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
 
@@ -151,9 +150,9 @@ const Login = () => {
       }
 
       toast.success(data.message || "Login successful");
-      dispatch(setIsAuthenticated(true));
-      dispatch(setUser(data.data?.role || "user"));
-
+      dispatch(setCredentials({ 
+  user: { role: data.data?.role || "user" } 
+}));
       const redirectPath = data.data?.role === "user" ? "/" : "/dashboard";
       navigate(redirectPath);
     } catch (err) {

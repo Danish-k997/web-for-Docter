@@ -1,41 +1,92 @@
-import {createSlice} from "@reduxjs/toolkit"
+// src/redux/authSlice.ts
+import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
+import api from "../AxioseApis/api";
+import { isAxiosError } from "axios";
 
-interface AuthState {
-  userId: string | null;
-  user: string | null;
-  isAuthenticated: boolean;
-  loading: boolean;
+// 1. Industry Standard: Define precise type for User
+export interface UserData {
+  role: string;
+  id?: string;
 }
 
-const initialState:AuthState = {
-  userId:null,
-  user:null,
-  isAuthenticated:false,
-  loading:false,
-} 
+interface AuthState {
+  isAuthenticated: boolean;                   
+  userId: string | null;
+  user: UserData | null; // <-- Changed to object
+  loading: boolean;
+  isInitialized: boolean;
+  isOtpPending: boolean;
+}
 
-const authSlice = createSlice({
-  name:"auth",
+const initialState: AuthState = {
+  isAuthenticated: false,
+  user: null,
+  userId: null,
+  loading: true,
+  isInitialized: false,
+  isOtpPending: false,
+};
 
-  initialState,
-
-  reducers:{
-    setuserId:(state, action) =>{
-        state.userId = action.payload        
-    },
-    setUser:(state, action) =>{
-        state.user = action.payload
-    },
-    setIsAuthenticated:(state, action) =>{
-        state.isAuthenticated = action.payload
-    },
-    setLoading:(state, action) =>{
-        state.loading = action.payload
+export const checkAuthSession = createAsyncThunk(
+  "auth/checkSession",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/auth/getme");
+      return response.data.user;
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        return rejectWithValue(error.response?.data || "Session expired");
+      }
+      return rejectWithValue("Something went wrong");
     }
   }
-})
+);
 
-export const {setuserId, setUser, setIsAuthenticated, setLoading} = authSlice.actions
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    logout: (state) => {
+      state.isAuthenticated = false;
+      state.user = null;
+      state.userId = null;
+      state.loading = false;
+      state.isOtpPending = false;
+    },
+    // Step 1: Signup par dispatch hoga
+    setPendingVerification: (state, action: PayloadAction<{ userId: string }>) => {
+      state.userId = action.payload.userId;
+      state.isOtpPending = true;
+      state.isAuthenticated = false; // OTP verify hona baki hai
+    },
+    // Step 2: OTP Success par dispatch hoga
+    setCredentials: (state, action: PayloadAction<{ user: UserData }>) => {
+      state.user = action.payload.user;
+      state.isAuthenticated = true; // User officially logged in
+      state.isOtpPending = false; 
+      state.userId = null; // Login ho gaya to ab temporary ID ki jarurat nahi
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(checkAuthSession.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(checkAuthSession.fulfilled, (state, action) => {
+        state.isAuthenticated = true;
+        state.user = action.payload; // Backend user object dega
+        state.loading = false;
+        state.isInitialized = true;
+      })
+      .addCase(checkAuthSession.rejected, (state) => {
+        state.isAuthenticated = false;
+        state.user = null;
+        state.userId = null;
+        state.loading = false;
+        state.isInitialized = true;
+      });
+  },
+});
 
+export const { logout, setCredentials, setPendingVerification } = authSlice.actions;
 export default authSlice.reducer;
-

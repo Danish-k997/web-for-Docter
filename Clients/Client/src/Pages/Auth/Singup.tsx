@@ -6,8 +6,8 @@ import {
   registerUser,
 } from "../../Serveces/apiservices";
 import dotcer from "../../assets/dot.png";
-import { useDispatch } from "react-redux";
-import { setuserId } from "../../redux/authSlice";
+import { UseAppDispatch } from "../../Serveces/Hook"; // ✅ Redux Hook
+import { setPendingVerification } from "../../redux/authSlice"; //
 import { toast } from "react-toastify";
 
 type FieldErrors = Partial<Record<"username" | "email" | "password", string>>;
@@ -39,9 +39,9 @@ const Singup = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const dispatch = useDispatch();
+ 
   const navigate = useNavigate();
-
+const dispatch = UseAppDispatch(); 
   const inputClass = useMemo(
     () =>
       "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 outline-none transition-shadow focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15 disabled:opacity-60",
@@ -64,7 +64,7 @@ const Singup = () => {
         email: email.trim(),
         password,
       });
-      console.log(data);
+     
 
       const userId = data.user.userId;
       
@@ -73,7 +73,7 @@ const Singup = () => {
         navigate("/signup");
         return; // Function yahan ruk jayega
       }
-      dispatch(setuserId(userId));
+      dispatch(setPendingVerification({ userId: userId }));
       setSuccessMessage(data.message);
       toast.success(data.message || "Registered successfully!");
       setUsername("");

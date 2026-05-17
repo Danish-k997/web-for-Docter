@@ -33,7 +33,7 @@ export const verifiyotp = async(data:VerifyOtpRequest) => {
   return res.data
 }
   
-export const logout = async () => {
+export const logoutuser = async () => {
   const response = await api.get("/auth/logout");
   return response.data;
 };

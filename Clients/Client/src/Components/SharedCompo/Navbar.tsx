@@ -1,35 +1,36 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { UseAppSelector, UseAppDispatch } from "../../Serveces/Hook";
-import { logout } from "../../Serveces/apiservices";
+import { logoutuser } from "../../Serveces/apiservices";
 import { LogOut } from "lucide-react";
-import { setIsAuthenticated, setUser } from "../../redux/authSlice";
+import { logout } from "../../redux/authSlice";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const isAuthenticated = UseAppSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated, user } = UseAppSelector((state) => state.auth);
   const dispatch = UseAppDispatch();
 
-const handleLogout = async () => {
-  try {
-    await logout();
-    // Redux state को clear करो
-    dispatch(setIsAuthenticated(false));
-    dispatch(setUser(null));
-    // Token को remove करो
-    localStorage.removeItem("accessToken");
-    sessionStorage.removeItem("accessToken");
-    // Login page पर redirect करो
-    window.location.href = "/login";
-  } catch (error) {
-    console.error("Logout failed:", error);
-  }
-}
+  const handleLogout = async () => {
+    try {
+      await logoutuser();
+
+      dispatch(logout());
+
+      localStorage.removeItem("accessToken");
+      sessionStorage.removeItem("accessToken");
+
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   const navlinks = [
     { name: "Home", href: "/" },
     { name: "Expertise", href: "#" },
     { name: "Schedule", href: "#" },
-    { name: "Clinic", href: "#" },
+    ...(user === "admin"
+      ? [{ name: "Dashboard", href: "/dashboard" }]
+      : [{ name: "Clinic", href: "#" }]),
     ...(isAuthenticated ? [{ name: "My report", href: "/myreport" }] : []),
   ];
 
@@ -63,23 +64,23 @@ const handleLogout = async () => {
 
         {/* Desktop CTA (Call to Action) */}
         <div className="hidden md:block">
-           {isAuthenticated ? (
-              <button 
-                onClick={handleLogout}
-                className="block text-center bg-[#004d40] text-white py-2 px-3 rounded-xl font-semibold"
-              >
-                Logout
-                <LogOut className="inline-block ml-2" size={18} />
-              </button>
-            ) : (
-              <Link
-                to="/signup"
-                onClick={() => setIsMenuOpen(false)}
-                className="block text-center bg-[#004d40] text-white py-2 px-3 rounded-xl font-semibold"
-              >
-                Sign Up
-              </Link>
-            )}
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="block text-center bg-[#004d40] text-white py-2 px-3 rounded-xl font-semibold"
+            >
+              Logout
+              <LogOut className="inline-block ml-2" size={18} />
+            </button>
+          ) : (
+            <Link
+              to="/signup"
+              onClick={() => setIsMenuOpen(false)}
+              className="block text-center bg-[#004d40] text-white py-2 px-3 rounded-xl font-semibold"
+            >
+              Sign Up
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Toggle Button */}
@@ -121,7 +122,7 @@ const handleLogout = async () => {
           ))}
           <li className="pt-2">
             {isAuthenticated ? (
-              <button 
+              <button
                 onClick={handleLogout}
                 className="block text-center bg-[#004d40] text-white py-2 px-3 rounded-xl font-semibold"
               >

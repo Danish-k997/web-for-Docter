@@ -3,13 +3,12 @@ import type { FC } from "react";
 import { useNavigate } from "react-router-dom"; // Industry standard navigation
 import { verifiyotp, getRequestErrorMessage } from "../../Serveces/apiservices";
 import { toast } from "react-toastify";
-import { UseAppSelector } from "../../Serveces/Hook";
 import { UseAppDispatch } from "../../Serveces/Hook";
-import { setIsAuthenticated } from "../../redux/authSlice";
-import { setUser } from "../../redux/authSlice";
+import { setCredentials } from "../../redux/authSlice";
+import { useAuth } from "../../Serveces/Auth";
+
 import { setAccessToken } from "../../AxioseApis/api";
 
-// Industry Standard: Define precise types
 interface OTPProps {
   email?: string;
   length?: number;
@@ -20,15 +19,15 @@ const OTPVerification: FC<OTPProps> = ({ email = "User", length = 6 }) => {
   const [timer, setTimer] = useState<number>(119);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
-  const userId = UseAppSelector((state) => state.auth.userId);
   const navigate = useNavigate();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const dispatch = UseAppDispatch();
-  // 2. Optimized Handler with proper Typing
+  const { userId } = useAuth();
+
   const handleRef = (el: HTMLInputElement | null, index: number): void => {
     inputRefs.current[index] = el;
   };
-  // Timer logic - Cleaned up
+
   useEffect(() => {
     if (timer === 0) return;
     const interval = setInterval(() => setTimer((t) => t - 1), 1000);
@@ -43,7 +42,6 @@ const OTPVerification: FC<OTPProps> = ({ email = "User", length = 6 }) => {
     return `${m}:${s}`;
   };
 
-  
   const handleVerify = useCallback(async () => {
     const fullOtp = otp.join("");
 
@@ -62,26 +60,25 @@ const OTPVerification: FC<OTPProps> = ({ email = "User", length = 6 }) => {
     setIsVerifying(true);
     try {
       const response = await verifiyotp({ userId, otp: fullOtp });
-      console.log("log access token",response);
-      
-      setAccessToken(response.accessToken); 
-if (!response.success) {
-   return;
-}
+      console.log("log access token", response);
 
-const  role = response.data?.role || "user";
+      setAccessToken(response.accessToken);
+      if (!response.success) {
+        return;
+      }
 
-toast.success("Account verified successfully!");
+      const role = response.data?.role || "user";
 
-dispatch(setIsAuthenticated(true));
-dispatch(setUser(role));
+      toast.success("Account verified successfully!");
 
-const redirectPath =
-   role === "user"
-      ? "/"
-      : "/dashboard";
+      dispatch(
+        setCredentials({
+          user: { role: role },
+        }),
+      );
+      const redirectPath = role === "user" ? "/" : "/dashboard";
 
-navigate(redirectPath);
+      navigate(redirectPath);
     } catch (error) {
       const msg = getRequestErrorMessage(error);
       toast.error(msg || "Invalid OTP");
