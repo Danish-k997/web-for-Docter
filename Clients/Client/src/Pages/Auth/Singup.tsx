@@ -80,7 +80,6 @@ const dispatch = UseAppDispatch();
       setEmail("");
       setPassword("");
       setFieldErrors({});
-      console.log(userId);
       navigate("/verify-otp");
     } catch (err) {
       setBannerError(getRequestErrorMessage(err));

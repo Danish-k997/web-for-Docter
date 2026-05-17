@@ -10,6 +10,7 @@ import Singup from "./Pages/Auth/Singup.tsx";
 import Otpverifay from "./Pages/Auth/Otpverifay.tsx";
 import Login from "./Pages/Auth/Login.tsx";
 import Myreport from "./Pages/Myreport/Myreport.tsx";
+import Addreport from "./Pages/Myreport/Addreport.tsx";
 import Sppiner from "./Components/SharedCompo/Sppiner.tsx";
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
           <Route path="/verify-otp" element={<Otpverifay />} />
           <Route element={<ProtectedRouter allowedRoles={["user", "admin"]} />}>
             <Route path="/myreport" element={<Myreport />} />
+            <Route path="/myreport/add" element={<Addreport />} />
           </Route>
         </Routes>
       </main>

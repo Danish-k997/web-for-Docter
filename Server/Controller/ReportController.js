@@ -44,7 +44,7 @@ export const addReport = async (req, res) => {
     // Remove failed uploads
     const images = uploadedImages.filter(Boolean).map((response) => ({
       url: response.secure_url,
-      publicId: response.public_id,
+      public_id: response.public_id,
     }));
     console.log("uploded img", images);
 
@@ -73,6 +73,48 @@ export const addReport = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+export const getReports = async (req, res) => {
+  const userId = req.user?._id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: User session not found",
+    });
+  }
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const reports = await ReportModel.find({ userId })
+      .select("-__v")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalReports = await ReportModel.countDocuments({ userId });
+    return res.status(200).json({
+      success: true,
+      message: "Reports fetched successfully",
+      pagination: {
+        totalItems: totalReports,
+        currentPage: page,
+        totalPages: Math.ceil(totalReports / limit),
+        itemsPerPage: limit,
+      },
+      data: reports,
+    });
+  } catch (error) {
+    console.error(`[GetReports Error]: ${error.message}`, { userId, error });
+
+    return res.status(500).json({
+      success: false,
+      message: "An internal server error occurred. Please try again later.",
     });
   }
 };

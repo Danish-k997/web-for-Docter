@@ -22,6 +22,11 @@ data?: {
 };
 }
 
+export interface AddReportResponse {
+  success: boolean;
+  message: string;
+  data?: unknown;
+}
 
 export const registerUser = async(Userdate:RegisterData) => {
   const res = await api.post("/auth/register",Userdate)
@@ -43,6 +48,14 @@ export const loginUser = async (credentials: LoginCredentials) => {
   return res.data;
 };
 
+export const addReport = async (reportData: globalThis.FormData) => {
+  const res = await api.post("/report/add-report", reportData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return res.data;
+}
 
 export function getRequestErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {

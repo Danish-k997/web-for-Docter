@@ -1,6 +1,6 @@
 // src/redux/authSlice.ts
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
-import api from "../AxioseApis/api";
+import api, { setAccessToken } from "../AxioseApis/api";
 import { isAxiosError } from "axios";
 
 // 1. Industry Standard: Define precise type for User
@@ -31,9 +31,16 @@ export const checkAuthSession = createAsyncThunk(
   "auth/checkSession",
   async (_, { rejectWithValue }) => {
     try {
+      const refreshResponse = await api.get("/auth/refresh-token");
+      const accessToken = refreshResponse.data?.accessToken;
+      if (accessToken) {
+        setAccessToken(accessToken);
+      }
+
       const response = await api.get("/auth/getme");
       return response.data.user;
     } catch (error: unknown) {
+      setAccessToken(null);
       if (isAxiosError(error)) {
         return rejectWithValue(error.response?.data || "Session expired");
       }
@@ -52,6 +59,7 @@ const authSlice = createSlice({
       state.userId = null;
       state.loading = false;
       state.isOtpPending = false;
+      setAccessToken(null);
     },
     // Step 1: Signup par dispatch hoga
     setPendingVerification: (state, action: PayloadAction<{ userId: string }>) => {

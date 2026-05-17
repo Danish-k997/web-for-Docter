@@ -1,7 +1,7 @@
 
 import Hero from "../../Components/Customer/Hero";
 import QualificationSection from "../../Components/Customer/Qulifaction";
-import Experties from "../../Components/Customer/experties";
+import Experties from "../../Components/Customer/Experties";
 
 const Home = () => {
   return (

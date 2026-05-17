@@ -5,7 +5,7 @@ import { verifyJWT } from "../middleware/authmiddleware.js";
 const router = express.Router();
 
 router.post('/add-report', verifyJWT, upload.array('images', 10), ReportController.addReport); 
-
+router.get('/get-reports', verifyJWT, ReportController.getReports);
 
 
 

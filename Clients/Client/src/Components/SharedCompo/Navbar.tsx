@@ -28,7 +28,7 @@ const Navbar = () => {
     { name: "Home", href: "/" },
     { name: "Expertise", href: "#" },
     { name: "Schedule", href: "#" },
-    ...(user === "admin"
+    ...(user?.role === "admin"
       ? [{ name: "Dashboard", href: "/dashboard" }]
       : [{ name: "Clinic", href: "#" }]),
     ...(isAuthenticated ? [{ name: "My report", href: "/myreport" }] : []),
@@ -51,12 +51,12 @@ const Navbar = () => {
           <ul className="flex gap-8 items-center text-gray-700 font-medium">
             {navlinks.map((link) => (
               <li key={link.name}>
-                <a
-                  href={link.href}
+                <Link
+                  to={link.href}
                   className="hover:text-teal-600 transition-all duration-300"
                 >
                   {link.name}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -111,13 +111,13 @@ const Navbar = () => {
         <ul className="flex flex-col p-6 gap-4 text-gray-700 font-medium">
           {navlinks.map((link) => (
             <li key={link.name} className="border-b border-gray-50 pb-2">
-              <a
-                href={link.href}
+              <Link
+                to={link.href}
                 onClick={() => setIsMenuOpen(false)}
                 className="block text-lg"
               >
                 {link.name}
-              </a>
+              </Link>
             </li>
           ))}
           <li className="pt-2">

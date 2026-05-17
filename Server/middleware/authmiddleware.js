@@ -19,7 +19,7 @@ export const roleauthorize = (allowedRoles) => {
   };
 };
 
-export const verifyJWT = (req, res, next) => {
+export const verifyJWT = async (req, res, next) => {
   try {
     const token =
       req.cookies.token || req.headers.authorization?.replace("Bearer ", "");
@@ -32,7 +32,7 @@ export const verifyJWT = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = UserModel.findById(decoded.userId).select("-password");
+    const user = await UserModel.findById(decoded.userId).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
