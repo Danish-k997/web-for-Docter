@@ -6,7 +6,7 @@ import crypto from "crypto";
 import optModel from "../models/OtpModal.js";
 import { generateOtp, getopthtml } from "../Utlis/utlis.js";
 import { Sendemail } from "../Services/email.services.js";
-
+import { da } from "zod/v4/locales";
 
 // --- HELPERS (Logic Centralization) ---
 
@@ -42,12 +42,11 @@ export const register = asyncHandler(async (req, res) => {
     email,
     password: hashedPassword,
   });
-     
-      
+
   const otp = generateOtp();
   const html = getopthtml(otp);
   const hashedOtp = hashToken(otp);
-      
+
   await optModel.create({
     email,
     userId: newUser._id,
@@ -101,7 +100,14 @@ export const login = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.status(200).json({ message: "Login successful", accessToken });
+  res.status(200).json({
+    message: "Login successful",
+    success: true,
+    data: {
+      role: user.role,
+    },
+    accessToken,
+  });
 });
 
 export const verifyOTP = asyncHandler(async (req, res) => {
@@ -119,7 +125,7 @@ export const verifyOTP = asyncHandler(async (req, res) => {
   const otpDoc = await optModel.findOne({
     userId: userId,
     Haseotp: hashedOtp,
-    expiresAt: { $gt: new Date() }
+    expiresAt: { $gt: new Date() },
   });
 
   if (!otpDoc) {
@@ -165,24 +171,23 @@ export const verifyOTP = asyncHandler(async (req, res) => {
       role: user.role,
       verified: user.Verified,
     },
-    accessToken, 
+    accessToken,
   });
 });
 
 export const getme = asyncHandler(async (req, res) => {
-  // Logic: Token decoding middleware mein honi chahiye (protect middleware)
-  // Phir bhi as per your code:
+  // Only accept Bearer access token — never the refresh token cookie
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "Unauthorized" });
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
   const user = await UserModel.findById(decoded.userId);
-
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  res
-    .status(200)
-    .json({ user: { username: user.username, email: user.email, role: user.role } });
+  res.status(200).json({
+    authenticated: true,
+    user: { username: user.username, role: user.role },
+  });
 });
 
 export const refreshtoken = asyncHandler(async (req, res) => {

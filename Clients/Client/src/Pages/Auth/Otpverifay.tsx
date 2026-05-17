@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom"; // Industry standard navigation
 import { verifiyotp, getRequestErrorMessage } from "../../Serveces/apiservices";
 import { toast } from "react-toastify";
 import { UseAppSelector } from "../../Serveces/Hook";
+import { UseAppDispatch } from "../../Serveces/Hook";
+import { setIsAuthenticated } from "../../redux/authSlice";
+import { setUser } from "../../redux/authSlice";
+import { setAccessToken } from "../../AxioseApis/api";
 
 // Industry Standard: Define precise types
 interface OTPProps {
@@ -19,7 +23,7 @@ const OTPVerification: FC<OTPProps> = ({ email = "User", length = 6 }) => {
   const userId = UseAppSelector((state) => state.auth.userId);
   const navigate = useNavigate();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
+  const dispatch = UseAppDispatch();
   // 2. Optimized Handler with proper Typing
   const handleRef = (el: HTMLInputElement | null, index: number): void => {
     inputRefs.current[index] = el;
@@ -39,7 +43,7 @@ const OTPVerification: FC<OTPProps> = ({ email = "User", length = 6 }) => {
     return `${m}:${s}`;
   };
 
-  // Industry Standard: Use Callback for performance
+  
   const handleVerify = useCallback(async () => {
     const fullOtp = otp.join("");
 
@@ -58,18 +62,33 @@ const OTPVerification: FC<OTPProps> = ({ email = "User", length = 6 }) => {
     setIsVerifying(true);
     try {
       const response = await verifiyotp({ userId, otp: fullOtp });
+      console.log("log access token",response);
+      
+      setAccessToken(response.accessToken); 
+if (!response.success) {
+   return;
+}
 
-      if (response.success) {
-        toast.success("Account verified successfully!");
-        navigate("/reports"); // Direct to login after success
-      }
+const  role = response.data?.role || "user";
+
+toast.success("Account verified successfully!");
+
+dispatch(setIsAuthenticated(true));
+dispatch(setUser(role));
+
+const redirectPath =
+   role === "user"
+      ? "/"
+      : "/dashboard";
+
+navigate(redirectPath);
     } catch (error) {
       const msg = getRequestErrorMessage(error);
       toast.error(msg || "Invalid OTP");
     } finally {
       setIsVerifying(false);
     }
-  }, [otp, userId, length, navigate]);
+  }, [otp, userId, length, navigate, dispatch]);
 
   // Handle Input Changes
   const handleChange = (value: string, index: number) => {

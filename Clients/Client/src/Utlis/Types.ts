@@ -7,6 +7,10 @@ export interface VerifyOtpRequest {
 export interface VerifyOtpResponse {
   success: boolean;
   message: string;
-  token?: string;
-  verified: boolean;
+  data?: {
+    role: string;
+    verified: boolean;
+  };
+  accessToken: string;
+  
 }

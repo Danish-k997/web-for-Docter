@@ -2,14 +2,18 @@ import { useMemo, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { getRequestErrorMessage, loginUser } from "../../Serveces/apiservices";
-import api from "../../AxioseApis/api";
+import { setAccessToken } from "../../AxioseApis/api";
 import { toast } from "react-toastify";
-
-const ACCESS_STORAGE_KEY = "accessToken";
+import { UseAppDispatch } from "../../Serveces/Hook";
+import { setIsAuthenticated } from "../../redux/authSlice";
+import { setUser } from "../../redux/authSlice";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
 
-function validateForm(values: { email: string; password: string }): FieldErrors {
+function validateForm(values: {
+  email: string;
+  password: string;
+}): FieldErrors {
   const errors: FieldErrors = {};
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
     errors.email = "Enter a valid email address";
@@ -28,7 +32,13 @@ function ClinicHeader() {
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#004d40] text-white shadow-sm"
           aria-hidden
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
               d="M12 3v18M6 9h12M6 15h8"
               stroke="currentColor"
@@ -114,7 +124,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
-
+  const dispatch = UseAppDispatch();
   const inputClass = useMemo(
     () =>
       "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 outline-none transition-shadow focus:border-[#004d40] focus:ring-2 focus:ring-[#004d40]/15 disabled:opacity-60",
@@ -122,14 +132,6 @@ const Login = () => {
   );
 
   const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
-
-  const persistToken = (token: string, remember: boolean) => {
-    const storage = remember ? localStorage : sessionStorage;
-    const other = remember ? sessionStorage : localStorage;
-    other.removeItem(ACCESS_STORAGE_KEY);
-    storage.setItem(ACCESS_STORAGE_KEY, token);
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -142,9 +144,18 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       const data = await loginUser({ email: email.trim(), password });
-      persistToken(data.accessToken, rememberMe);
+
+      setAccessToken(data.accessToken);
+      if (!data.success) {
+        return toast.error(data.message || "Login failed");
+      }
+
       toast.success(data.message || "Login successful");
-      navigate("/");
+      dispatch(setIsAuthenticated(true));
+      dispatch(setUser(data.data?.role || "user"));
+
+      const redirectPath = data.data?.role === "user" ? "/" : "/dashboard";
+      navigate(redirectPath);
     } catch (err) {
       const msg = getRequestErrorMessage(err);
       setBannerError(msg);
@@ -167,7 +178,9 @@ const Login = () => {
 
             <div className="order-1 flex flex-col justify-center px-6 py-10 sm:px-10 sm:py-12 lg:order-2 lg:px-12 lg:py-14">
               <div className="mx-auto w-full max-w-md rounded-2xl border border-gray-100/90 bg-white/95 p-6 shadow-sm sm:p-8">
-                <h1 className="text-2xl font-bold leading-tight text-[#004d40] sm:text-3xl">Welcome Back!</h1>
+                <h1 className="text-2xl font-bold leading-tight text-[#004d40] sm:text-3xl">
+                  Welcome Back!
+                </h1>
                 <p className="mt-3 text-sm leading-relaxed text-gray-600 sm:text-base">
                   Login to access your appointments and medical records.
                 </p>
@@ -181,7 +194,11 @@ const Login = () => {
                   </div>
                 )}
 
-                <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+                <form
+                  className="mt-8 space-y-5"
+                  onSubmit={handleSubmit}
+                  noValidate
+                >
                   <div>
                     <div className="flex items-center justify-between gap-2">
                       <label htmlFor="login-email" className={labelClass}>
@@ -197,7 +214,8 @@ const Login = () => {
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
-                        if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: undefined }));
+                        if (fieldErrors.email)
+                          setFieldErrors((p) => ({ ...p, email: undefined }));
                       }}
                       className={inputClass}
                       aria-invalid={Boolean(fieldErrors.email)}
@@ -212,13 +230,18 @@ const Login = () => {
 
                   <div>
                     <div className="mb-1.5 flex items-center justify-between gap-2">
-                      <label htmlFor="login-password" className="text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="login-password"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         Password
                       </label>
                       <button
                         type="button"
                         className="shrink-0 text-sm font-semibold text-[#004d40] underline-offset-2 hover:text-teal-900 hover:underline"
-                        onClick={() => toast.info("Password reset will be available soon.")}
+                        onClick={() =>
+                          toast.info("Password reset will be available soon.")
+                        }
                       >
                         Forgot Password?
                       </button>
@@ -233,7 +256,11 @@ const Login = () => {
                         value={password}
                         onChange={(e) => {
                           setPassword(e.target.value);
-                          if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: undefined }));
+                          if (fieldErrors.password)
+                            setFieldErrors((p) => ({
+                              ...p,
+                              password: undefined,
+                            }));
                         }}
                         className={`${inputClass} pr-12`}
                         aria-invalid={Boolean(fieldErrors.password)}
@@ -243,10 +270,16 @@ const Login = () => {
                         type="button"
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
                         onClick={() => setShowPassword((v) => !v)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
                         disabled={isSubmitting}
                       >
-                        {showPassword ? <EyeOff className="h-5 w-5" aria-hidden /> : <Eye className="h-5 w-5" aria-hidden />}
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" aria-hidden />
+                        ) : (
+                          <Eye className="h-5 w-5" aria-hidden />
+                        )}
                       </button>
                     </div>
                     {fieldErrors.password && (
@@ -266,7 +299,10 @@ const Login = () => {
                       className="h-4 w-4 rounded border-gray-300 text-[#004d40] focus:ring-[#004d40]/30"
                       disabled={isSubmitting}
                     />
-                    <label htmlFor="login-remember" className="text-sm text-gray-700 select-none">
+                    <label
+                      htmlFor="login-remember"
+                      className="text-sm text-gray-700 select-none"
+                    >
                       Remember Me
                     </label>
                   </div>
@@ -299,4 +335,3 @@ const Login = () => {
 };
 
 export default Login;
-                               

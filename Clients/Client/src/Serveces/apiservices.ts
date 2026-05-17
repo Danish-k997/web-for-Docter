@@ -1,3 +1,4 @@
+
 import { isAxiosError } from "axios";
 import api from "../AxioseApis/api";
 import type {VerifyOtpRequest, VerifyOtpResponse} from "../Utlis/Types"
@@ -7,6 +8,19 @@ export interface RegisterData {
   email: string;
   password: string;
 } 
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  message: string;
+  accessToken: string;
+  success: boolean;
+data?: {
+  role: string;
+};
+}
 
 
 export const registerUser = async(Userdate:RegisterData) => {
@@ -18,16 +32,11 @@ export const verifiyotp = async(data:VerifyOtpRequest) => {
   const res = await api.post<VerifyOtpResponse>("auth/verifyotp",data)
   return res.data
 }
-                                                                                            
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  message: string;
-  accessToken: string;
-}
+  
+export const logout = async () => {
+  const response = await api.get("/auth/logout");
+  return response.data;
+};
 
 export const loginUser = async (credentials: LoginCredentials) => {
   const res = await api.post<LoginResponse>("/auth/login", credentials);

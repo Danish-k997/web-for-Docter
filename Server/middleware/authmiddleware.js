@@ -1,8 +1,14 @@
-
-
+import jwt from "jsonwebtoken";
+import UserModel from "../models/Usermodels.js";
 
 export const roleauthorize = (allowedRoles) => {
   return (req, res, next) => {
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized request. User not authenticated." });
+    }
+
     const userRole = req.user.role;
 
     if (!allowedRoles.includes(userRole)) {
@@ -11,21 +17,28 @@ export const roleauthorize = (allowedRoles) => {
 
     next();
   };
-};  
+};
 
-export const authmiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  const token = authHeader.split(" ")[1];
-
+export const verifyJWT = (req, res, next) => {
   try {
+    const token =
+      req.cookies.token || req.headers.authorization?.replace("Bearer ", "");
+
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized request. Token missing." });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+
+    const user = UserModel.findById(decoded.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
+    res.status(401).json({ message: "error.message || 'Unauthorized'" });
   }
-}
+};
