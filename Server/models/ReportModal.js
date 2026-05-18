@@ -16,6 +16,16 @@ const ReportSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
+    title: {
+      type: String,
+      default: "medical report",
+    },
+    status: {
+      type: String,
+      enum: ["pending", "completed"],
+      default: "pending",
+    },
+
     images: [
       {
         url: String,
@@ -26,7 +36,9 @@ const ReportSchema = new mongoose.Schema(
   {
     timestamps: true,
   },
-);
+);  
+
+ReportSchema.index({name:"text", title:"text"});
 
 const Report = mongoose.model("Report", ReportSchema);
 export default Report;

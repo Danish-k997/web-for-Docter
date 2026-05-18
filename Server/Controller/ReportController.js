@@ -3,7 +3,7 @@ import { uploadToCloudinary } from "../Utlis/cloudinery.js";
 
 export const addReport = async (req, res) => {
   try {
-    const { name, date } = req.body;
+    const { name, date, title } = req.body;
     const userId = req.user?._id;
     if (!userId) {
       return res.status(401).json({
@@ -12,7 +12,7 @@ export const addReport = async (req, res) => {
       });
     }
     // Validation
-    if ([name, date].some((field) => !field?.trim())) {
+    if ([name, date, title].some((field) => !field?.trim())) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -27,26 +27,20 @@ export const addReport = async (req, res) => {
       });
     }
 
-    console.log("req.files", req.files);
     // Extract local paths
     const localImagePaths = req.files.map((file) => file.path);
-    console.log("local paths", localImagePaths);
     // Upload promises
     const uploadPromises = localImagePaths.map((path) =>
       uploadToCloudinary(path),
     );
 
-    console.log("uploadPromises", uploadPromises);
-
     // Parallel upload
     const uploadedImages = await Promise.all(uploadPromises);
-    console.log("uploadedImages", uploadedImages);
     // Remove failed uploads
     const images = uploadedImages.filter(Boolean).map((response) => ({
       url: response.secure_url,
       public_id: response.public_id,
     }));
-    console.log("uploded img", images);
 
     // Check uploads
     if (images.length === 0) {
@@ -61,6 +55,7 @@ export const addReport = async (req, res) => {
       userId,
       name,
       date,
+      title,
       images,
     });
 
@@ -86,18 +81,23 @@ export const getReports = async (req, res) => {
     });
   }
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(
+      Math.max(parseInt(req.query.limit, 10) || 10, 1),
+      20,
+    );
     const skip = (page - 1) * limit;
 
-    const reports = await ReportModel.find({ userId })
-      .select("-__v")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const [reports, totalReports] = await Promise.all([
+      ReportModel.find({ userId })
+        .select("-__v")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      ReportModel.countDocuments({ userId }),
+    ]);
 
-    const totalReports = await ReportModel.countDocuments({ userId });
     return res.status(200).json({
       success: true,
       message: "Reports fetched successfully",
@@ -118,3 +118,84 @@ export const getReports = async (req, res) => {
     });
   }
 };
+
+export const getallReports = async (req, res) => {
+  try {
+    const limit = Math.max(
+      1,
+      Math.min(100, parseInt(req.query.limit, 10) || 10),
+    );
+
+    const { status, search, fromDate, toDate, cursor } = req.query;
+
+    const queryFilter = {};
+
+    const allowedStatuses = ["pending", "completed"];
+
+    if (status && allowedStatuses.includes(status)) {
+      queryFilter.status = status;
+    }
+
+    if (search?.trim()) {
+      queryFilter.$text = {
+        $search: search,
+      };
+    }
+
+    if (fromDate || toDate) {
+      queryFilter.createdAt = {};
+    }
+
+    if (fromDate) {
+      queryFilter.createdAt.$gte = new Date(fromDate);
+    }
+
+    if (toDate) {
+      queryFilter.createdAt.$lte = new Date(toDate);
+    }
+
+    // CURSOR PAGINATION
+    if (cursor) {
+      queryFilter._id = {
+        $lt: cursor,
+      };
+    }
+
+    let reports = await ReportModel.find(queryFilter)
+      .select("-__v")
+      .sort({ _id: -1 })
+      .limit(limit + 1)
+      .lean();
+
+    // CHECK NEXT PAGE
+    const hasNextPage = reports.length > limit;
+
+    // REMOVE EXTRA ITEM
+    if (hasNextPage) {
+      reports.pop();
+    }
+    // NEXT CURSOR
+    const nextCursor = reports[reports.length - 1]?._id;
+
+    return res.status(200).json({
+      success: true,
+      message: "All reports fetched successfully",
+      hasNextPage,
+      nextCursor,
+      data: reports,
+    });
+  } catch (error) {
+    console.error(
+      `[GetAllReports Error]:
+       ${error.message}`,
+      { error },
+    );
+
+    return res.status(500).json({
+      success: false,
+
+      message: "An internal server error occurred.",
+    });
+  }
+};
+

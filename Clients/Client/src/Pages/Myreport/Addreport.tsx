@@ -10,7 +10,7 @@ type SelectedImage = {
   previewUrl: string;
 };
 
-type FieldErrors = Partial<Record<"name" | "date" | "images", string>>;
+type FieldErrors = Partial<Record<"name" | "date" | "title" | "images", string>>;
 
 const MAX_IMAGES = 10;
 const MAX_FILE_SIZE_MB = 8;
@@ -19,6 +19,7 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const Addreport = () => {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
+  const [title, setTitle] = useState("");
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +44,7 @@ const Addreport = () => {
     const nextErrors: FieldErrors = {};
     if (!name.trim()) nextErrors.name = "Report name is required";
     if (!date) nextErrors.date = "Report date is required";
+    if (!title.trim()) nextErrors.title = "Report title is required";
     if (images.length === 0) nextErrors.images = "Select at least one image";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -104,6 +106,7 @@ const Addreport = () => {
     const reportData = new FormData();
     reportData.append("name", name.trim());
     reportData.append("date", date);
+    reportData.append("title", title.trim());
     images.forEach((image) => reportData.append("images", image.file));
 
     setIsSubmitting(true);
@@ -164,6 +167,31 @@ const Addreport = () => {
                 />
                 {errors.name && (
                   <p className="mt-1.5 text-sm text-red-600">{errors.name}</p>
+                )}
+              </div>
+              <div>
+                <label
+                  htmlFor="report-name"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  Report Title
+                </label>
+                <input
+                  id="report-title"
+                  type="text"
+                  value={title}
+                  onChange={(event) => {
+                    setTitle(event.target.value);
+                    if (errors.title) {
+                      setErrors((current) => ({ ...current, title: undefined }));
+                    }
+                  }}
+                  placeholder="enter report title"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-[#004d40] focus:ring-2 focus:ring-[#004d40]/15"
+                  aria-invalid={Boolean(errors.title)}
+                />
+                {errors.title && (
+                  <p className="mt-1.5 text-sm text-red-600">{errors.title}</p>
                 )}
               </div>
 

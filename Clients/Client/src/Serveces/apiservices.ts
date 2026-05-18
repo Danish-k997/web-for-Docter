@@ -28,6 +28,36 @@ export interface AddReportResponse {
   data?: unknown;
 }
 
+export interface ReportImage {
+  url: string;
+  public_id?: string;
+  _id?: string;
+}
+
+export interface ReportItem {
+  _id: string;
+  name: string;
+  date: string;
+  title: string;
+  images: ReportImage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportPagination {
+  totalItems: number;
+  currentPage: number;
+  totalPages: number;
+  itemsPerPage: number;
+}
+
+export interface GetReportsResponse {
+  success: boolean;
+  message: string;
+  pagination: ReportPagination;
+  data: ReportItem[];
+}
+
 export const registerUser = async(Userdate:RegisterData) => {
   const res = await api.post("/auth/register",Userdate)
   return res.data
@@ -56,6 +86,13 @@ export const addReport = async (reportData: globalThis.FormData) => {
   });
   return res.data;
 }
+
+export const getReports = async (page = 1, limit = 6) => {
+  const res = await api.get<GetReportsResponse>("/report/get-reports", {
+    params: { page, limit },
+  });
+  return res.data;
+};
 
 export function getRequestErrorMessage(error: unknown): string {
   if (isAxiosError(error)) {
