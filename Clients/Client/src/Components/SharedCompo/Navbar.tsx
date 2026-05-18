@@ -5,11 +5,12 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { Link as ScrollLink, scroller } from "react-scroll";
+import { Link as ScrollLink } from "react-scroll";
 import { UseAppSelector, UseAppDispatch } from "../../Serveces/Hook";
 import { logoutuser } from "../../Serveces/apiservices";
 import { LogOut } from "lucide-react";
 import { logout } from "../../redux/authSlice";
+import { scrollToHomeSection } from "../../Utlis/scrollToHomeSection";
 import {
   HOME_SECTIONS,
   NAVBAR_SCROLL_OFFSET,
@@ -92,11 +93,7 @@ const Navbar = () => {
     setActiveSection(target);
     closeMobileMenu();
     window.requestAnimationFrame(() => {
-      scroller.scrollTo(target, {
-        smooth: SCROLL_SMOOTH_EASING,
-        duration: SCROLL_DURATION,
-        offset: NAVBAR_SCROLL_OFFSET,
-      });
+      scrollToHomeSection(target);
     });
   };
 

@@ -1,17 +1,14 @@
 
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { scroller } from "react-scroll";
 import Hero from "../../Components/Customer/Hero";
 import QualificationSection from "../../Components/Customer/Qulifaction";
 import Experties from "../../Components/Customer/Experties";
 import ScheduleSection from "../../features/schedules/ScheduleSection";
 import TransformationsSection from "../../Components/Customer/TransformationsSection";
+import { scrollToHomeSection } from "../../Utlis/scrollToHomeSection";
 import {
   HOME_SECTIONS,
-  NAVBAR_SCROLL_OFFSET,
-  SCROLL_DURATION,
-  SCROLL_SMOOTH_EASING,
   type HomeSectionName,
 } from "../../config/navigation";
 
@@ -31,11 +28,7 @@ const Home = () => {
     if (!isHomeSectionName(state?.scrollTo)) return;
 
     const timerId = window.setTimeout(() => {
-      scroller.scrollTo(state.scrollTo!, {
-        smooth: SCROLL_SMOOTH_EASING,
-        duration: SCROLL_DURATION,
-        offset: NAVBAR_SCROLL_OFFSET,
-      });
+      scrollToHomeSection(state.scrollTo!);
       navigate(location.pathname, { replace: true, state: null });
     }, 80);
 
