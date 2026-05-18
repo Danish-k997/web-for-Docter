@@ -28,7 +28,6 @@ type PatientCardProps = {
   onSelect: (report: ReportItem) => void;
 };
 
-
 const formatDate = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Date not available";
@@ -58,9 +57,9 @@ const PatientCard = memo(({ report, onSelect }: PatientCardProps) => {
     <button
       type="button"
       onClick={handleSelect}
-      className="group flex min-h-32 w-full items-stretch overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+      className="group flex w-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 sm:min-h-32 sm:flex-row sm:items-stretch"
     >
-      <div className="h-auto w-28 shrink-0 bg-slate-100 sm:w-32">
+      <div className="aspect-[4/3] w-full shrink-0 bg-slate-100 sm:h-auto sm:w-32 sm:aspect-auto">
         {coverImage ? (
           <img
             src={coverImage.url}
@@ -75,28 +74,27 @@ const PatientCard = memo(({ report, onSelect }: PatientCardProps) => {
         )}
       </div>
 
-      <div className="min-w-0 flex-1 p-4">
+      <div className="min-w-0 flex-1 p-4 sm:p-4">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-800">
             <UserRound className="h-5 w-5" aria-hidden />
           </div>
-          <div className="min-w-0">
-            <h3 className="truncate text-base font-bold text-slate-950">
-              {report.name}
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-2 text-lg font-bold leading-6 text-slate-950 sm:truncate sm:text-base">
               {patientName}
             </h3>
-            <p className="mt-1 line-clamp-2 text-sm text-slate-600">
+            <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-600">
               {reportTitle}
             </p>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-          <span className="inline-flex items-center gap-1.5">
+        <div className="mt-4 grid gap-2 text-sm text-slate-500 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-2 sm:bg-transparent sm:px-0 sm:py-0">
             <CalendarDays className="h-4 w-4 text-teal-700" aria-hidden />
             {formatDate(report.date)}
           </span>
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-2 sm:bg-transparent sm:px-0 sm:py-0">
             <FileImage className="h-4 w-4 text-teal-700" aria-hidden />
             {images.length} image{images.length === 1 ? "" : "s"}
           </span>
@@ -244,7 +242,7 @@ const Dashbord = () => {
       <div className="lg:flex">
         <DashboardSidebar items={dashboardNavItems} />
 
-        <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-8">
+        <main className="min-w-0 flex-1 px-3 py-5 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-end">
               <div>
@@ -270,7 +268,7 @@ const Dashbord = () => {
               </button>
             </div>
 
-            <div className="mt-5 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div className="mt-5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
               <label
                 htmlFor="patient-search"
                 className="mb-2 block text-sm font-semibold text-slate-700"
@@ -288,7 +286,7 @@ const Dashbord = () => {
                   value={searchValue}
                   onChange={(event) => setSearchValue(event.target.value)}
                   placeholder="Search by patient name or report title"
-                  className="min-h-12 w-full rounded-lg border border-slate-300 bg-white pl-12 pr-4 text-sm text-slate-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15"
+                  className="min-h-12 w-full rounded-lg border border-slate-300 bg-white pl-12 pr-4 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15"
                 />
               </div>
             </div>
@@ -300,7 +298,7 @@ const Dashbord = () => {
             )}
 
             {isInitialLoading ? (
-              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div
                     key={index}
@@ -319,7 +317,7 @@ const Dashbord = () => {
                 </p>
               </div>
             ) : (
-              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {visibleReports.map((report) => (
                   <PatientCard
                     key={report._id}

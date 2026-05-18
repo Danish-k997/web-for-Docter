@@ -6,6 +6,7 @@ import ProtectedRouter from "./middleware/ProtectedRouter.tsx";
 import Home from "./Pages/Customers/Home.tsx";
 import "./App.css";
 import Navbar from "./Components/SharedCompo/Navbar.tsx";
+import Footer from "./Components/SharedCompo/Footer.tsx";
 import Singup from "./Pages/Auth/Singup.tsx";
 import Otpverifay from "./Pages/Auth/Otpverifay.tsx";
 import Login from "./Pages/Auth/Login.tsx";
@@ -24,6 +25,7 @@ function App() {
     pathname === "/login" ||
     pathname === "/verify-otp" ||
     pathname.startsWith("/dashboard");
+  const hideFooter = hideNavbar;
 
   const { isInitialized } = UseAppSelector((state) => state.auth);
 
@@ -58,7 +60,7 @@ function App() {
           </Route>
         </Routes>
       </main>
-      {/* Footer yahan aayega */}
+      {!hideFooter && <Footer />}
     </div>
   );
 }
