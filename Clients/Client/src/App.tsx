@@ -1,6 +1,6 @@
 import { Route, Routes, useLocation } from "react-router-dom";
 import { checkAuthSession } from "./redux/authSlice.ts";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { UseAppDispatch, UseAppSelector } from "./Serveces/Hook.ts";
 import ProtectedRouter from "./middleware/ProtectedRouter.tsx";
 import Home from "./Pages/Customers/Home.tsx";
@@ -11,19 +11,24 @@ import Otpverifay from "./Pages/Auth/Otpverifay.tsx";
 import Login from "./Pages/Auth/Login.tsx";
 import Myreport from "./Pages/Myreport/Myreport.tsx";
 import Addreport from "./Pages/Myreport/Addreport.tsx";
+import Dashbord from "./Pages/Myreport/Dashbord.tsx";
 import Sppiner from "./Components/SharedCompo/Sppiner.tsx";
 
 function App() {
   const { pathname } = useLocation();
   const dispatch = UseAppDispatch();
+  const didCheckSessionRef = useRef(false);
   const hideNavbar =
     pathname === "/signup" ||
     pathname === "/login" ||
-    pathname === "/verify-otp";
+    pathname === "/verify-otp" ||
+    pathname === "/dashboard";
 
   const { isInitialized } = UseAppSelector((state) => state.auth);
 
   useEffect(() => {
+    if (didCheckSessionRef.current) return;
+    didCheckSessionRef.current = true;
     dispatch(checkAuthSession());
   }, [dispatch]);
   if (!isInitialized) {
@@ -45,6 +50,9 @@ function App() {
           <Route element={<ProtectedRouter allowedRoles={["user", "admin"]} />}>
             <Route path="/myreport" element={<Myreport />} />
             <Route path="/myreport/add" element={<Addreport />} />
+          </Route>
+          <Route element={<ProtectedRouter allowedRoles={["admin"]} />}>
+            <Route path="/dashboard" element={<Dashbord />} />
           </Route>
         </Routes>
       </main>

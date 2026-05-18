@@ -6,7 +6,6 @@ import crypto from "crypto";
 import optModel from "../models/OtpModal.js";
 import { generateOtp, getopthtml } from "../Utlis/utlis.js";
 import { Sendemail } from "../Services/email.services.js";
-import { da } from "zod/v4/locales";
 
 // --- HELPERS (Logic Centralization) ---
 
@@ -198,11 +197,15 @@ export const refreshtoken = asyncHandler(async (req, res) => {
   const decoded = jwt.verify(oldRefreshToken, process.env.JWT_SECRET);
   const hashedOldRT = hashToken(oldRefreshToken);
 
-  const session = await Sessionmodal.findOne({
-    refreshtoken: hashedOldRT,
-    revoked: false,
-  });
+  const [session, user] = await Promise.all([
+    Sessionmodal.findOne({
+      refreshtoken: hashedOldRT,
+      revoked: false,
+    }),
+    UserModel.findById(decoded.userId).select("username role Verified"),
+  ]);
   if (!session) return res.status(401).json({ message: "Invalid session" });
+  if (!user) return res.status(404).json({ message: "User not found" });
 
   const { accessToken, refreshToken: newRefreshToken } = generateTokens(
     decoded.userId,
@@ -220,7 +223,14 @@ export const refreshtoken = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.status(200).json({ accessToken });
+  res.status(200).json({
+    accessToken,
+    user: {
+      username: user.username,
+      role: user.role,
+      verified: user.Verified,
+    },
+  });
 });
 
 export const logout = asyncHandler(async (req, res) => {

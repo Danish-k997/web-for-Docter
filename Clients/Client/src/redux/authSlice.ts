@@ -37,6 +37,10 @@ export const checkAuthSession = createAsyncThunk(
         setAccessToken(accessToken);
       }
 
+      if (refreshResponse.data?.user) {
+        return refreshResponse.data.user;
+      }
+
       const response = await api.get("/auth/getme");
       return response.data.user;
     } catch (error: unknown) {

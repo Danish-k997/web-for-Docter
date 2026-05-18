@@ -119,7 +119,7 @@ export const getReports = async (req, res) => {
   }
 };
 
-export const getallReports = async (req, res) => {
+export const getAllReports = async (req, res) => {
   try {
     const limit = Math.max(
       1,
@@ -136,9 +136,11 @@ export const getallReports = async (req, res) => {
       queryFilter.status = status;
     }
 
-    if (search?.trim()) {
+    const normalizedSearch = search?.trim();
+
+    if (normalizedSearch) {
       queryFilter.$text = {
-        $search: search,
+        $search: normalizedSearch,
       };
     }
 
@@ -198,4 +200,3 @@ export const getallReports = async (req, res) => {
     });
   }
 };
-

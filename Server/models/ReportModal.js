@@ -38,7 +38,9 @@ const ReportSchema = new mongoose.Schema(
   },
 );  
 
-ReportSchema.index({name:"text", title:"text"});
+ReportSchema.index({ name: "text", title: "text" });
+ReportSchema.index({ status: 1, _id: -1 });
+ReportSchema.index({ createdAt: -1, _id: -1 });
 
 const Report = mongoose.model("Report", ReportSchema);
 export default Report;

@@ -58,6 +58,23 @@ export interface GetReportsResponse {
   data: ReportItem[];
 }
 
+export interface GetAllReportsParams {
+  limit?: number;
+  cursor?: string | null;
+  search?: string;
+  status?: "pending" | "completed";
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface GetAllReportsResponse {
+  success: boolean;
+  message: string;
+  hasNextPage: boolean;
+  nextCursor?: string;
+  data: ReportItem[];
+}
+
 export const registerUser = async(Userdate:RegisterData) => {
   const res = await api.post("/auth/register",Userdate)
   return res.data
@@ -90,6 +107,20 @@ export const addReport = async (reportData: globalThis.FormData) => {
 export const getReports = async (page = 1, limit = 6) => {
   const res = await api.get<GetReportsResponse>("/report/get-reports", {
     params: { page, limit },
+  });
+  return res.data;
+};
+
+export const getAllReports = async (params: GetAllReportsParams = {}) => {
+  const res = await api.get<GetAllReportsResponse>("/report/get-all-reports", {
+    params: {
+      limit: params.limit,
+      cursor: params.cursor || undefined,
+      search: params.search?.trim() || undefined,
+      status: params.status,
+      fromDate: params.fromDate,
+      toDate: params.toDate,
+    },
   });
   return res.data;
 };
