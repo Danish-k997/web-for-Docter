@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarPlus, Clock3, Loader2, MapPin, Save } from "lucide-react";
+import { CalendarPlus, Loader2, MapPin, Save } from "lucide-react";
 import { toast } from "react-toastify";
 import DashboardSidebar, {
   type DashboardNavItem,
@@ -9,6 +9,8 @@ import {
   getSchedules,
 } from "../../features/schedules/scheduleApi";
 import ScheduleTable from "../../features/schedules/ScheduleTable";
+import ScheduleTimePicker from "../../features/schedules/ScheduleTimePicker";
+import { compareTime24 } from "../../features/schedules/scheduleTimeUtils";
 import {
   SCHEDULE_DAYS,
   type AddSchedulePayload,
@@ -69,7 +71,7 @@ const AddSchedule = () => {
     if (!form.dayOfWeek) nextErrors.dayOfWeek = "Day is required";
     if (!form.startTime) nextErrors.startTime = "Start time is required";
     if (!form.endTime) nextErrors.endTime = "End time is required";
-    if (form.startTime >= form.endTime) {
+    if (compareTime24(form.startTime, form.endTime) >= 0) {
       nextErrors.endTime = "End time must be after start time";
     }
     if (!form.location.trim()) nextErrors.location = "Location is required";
@@ -133,7 +135,7 @@ const AddSchedule = () => {
               </h1>
             </div>
 
-            <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,520px)_1fr]">
+            <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,560px)_1fr]">
               <form
                 onSubmit={handleSubmit}
                 className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
@@ -147,7 +149,7 @@ const AddSchedule = () => {
                       Schedule Details
                     </h2>
                     <p className="text-sm text-slate-600">
-                      One schedule per day is updated automatically.
+                      Pick hours in 12-hour format with AM or PM.
                     </p>
                   </div>
                 </div>
@@ -184,64 +186,24 @@ const AddSchedule = () => {
                     )}
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label
-                        htmlFor="schedule-start"
-                        className="mb-1.5 block text-sm font-medium text-slate-700"
-                      >
-                        Start Time
-                      </label>
-                      <div className="relative">
-                        <Clock3
-                          className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                          aria-hidden
-                        />
-                        <input
-                          id="schedule-start"
-                          type="time"
-                          value={form.startTime}
-                          onChange={(event) =>
-                            updateField("startTime", event.target.value)
-                          }
-                          className="min-h-12 w-full rounded-lg border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15"
-                        />
-                      </div>
-                      {errors.startTime && (
-                        <p className="mt-1.5 text-sm text-red-600">
-                          {errors.startTime}
-                        </p>
-                      )}
-                    </div>
+                  <div className="space-y-5">
+                    <ScheduleTimePicker
+                      id="schedule-start"
+                      label="Start Time"
+                      value={form.startTime}
+                      onChange={(time) => updateField("startTime", time)}
+                      error={errors.startTime}
+                      fallbackParts={{ hour: 10, minute: 0, period: "AM" }}
+                    />
 
-                    <div>
-                      <label
-                        htmlFor="schedule-end"
-                        className="mb-1.5 block text-sm font-medium text-slate-700"
-                      >
-                        End Time
-                      </label>
-                      <div className="relative">
-                        <Clock3
-                          className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                          aria-hidden
-                        />
-                        <input
-                          id="schedule-end"
-                          type="time"
-                          value={form.endTime}
-                          onChange={(event) =>
-                            updateField("endTime", event.target.value)
-                          }
-                          className="min-h-12 w-full rounded-lg border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-950 outline-none transition focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15"
-                        />
-                      </div>
-                      {errors.endTime && (
-                        <p className="mt-1.5 text-sm text-red-600">
-                          {errors.endTime}
-                        </p>
-                      )}
-                    </div>
+                    <ScheduleTimePicker
+                      id="schedule-end"
+                      label="End Time"
+                      value={form.endTime}
+                      onChange={(time) => updateField("endTime", time)}
+                      error={errors.endTime}
+                      fallbackParts={{ hour: 3, minute: 0, period: "PM" }}
+                    />
                   </div>
 
                   <div>

@@ -7,16 +7,7 @@ type ScheduleTableProps = {
   errorMessage?: string | null;
 };
 
-const formatTime = (time: string) => {
-  const [hour, minute] = time.split(":").map(Number);
-  if (Number.isNaN(hour) || Number.isNaN(minute)) return time;
-
-  return new Intl.DateTimeFormat("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(new Date(2026, 0, 1, hour, minute));
-};
+import { formatTime12Display } from "./scheduleTimeUtils";
 
 const getDoctorName = (doctor: DoctorSchedule["doctorId"]) => {
   if (!doctor || typeof doctor === "string") return "Doctor";
@@ -159,7 +150,7 @@ const ScheduleTable = memo(
                     </p>
                   </div>
                   <p className="mt-2 pl-7 text-lg font-semibold text-slate-950">
-                    {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                    {formatTime12Display(schedule.startTime)} - {formatTime12Display(schedule.endTime)}
                   </p>
                 </div>
 
@@ -219,7 +210,7 @@ const ScheduleTable = memo(
                   <td className="whitespace-nowrap px-6 py-6 align-middle text-base font-medium text-slate-800">
                     <span className="inline-flex items-center gap-3">
                       <ClockIcon className="h-5 w-5 text-teal-700" />
-                      {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                      {formatTime12Display(schedule.startTime)} - {formatTime12Display(schedule.endTime)}
                     </span>
                   </td>
                   <td className="px-6 py-6 align-middle text-base text-slate-700">
