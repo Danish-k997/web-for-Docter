@@ -1,5 +1,7 @@
 import React from 'react';
 import { Stethoscope, Video, Sparkles } from 'lucide-react';
+import { Element } from 'react-scroll';
+import { HOME_SECTIONS } from '../../config/navigation';
 
 const Expertise = () => {
   const expertiseData = [
@@ -27,7 +29,11 @@ const Expertise = () => {
   ];
 
   return (
-    <section className="py-20 bg-[#f8faf9] relative">
+    <Element
+      name={HOME_SECTIONS.expertise}
+      id={HOME_SECTIONS.expertise}
+      className="py-20 bg-[#f8faf9] relative"
+    >
       <div className="container mx-auto px-6">
         
         {/* Header Part */}
@@ -74,7 +80,7 @@ const Expertise = () => {
           ))}
         </div>
       </div>
-    </section>
+    </Element>
   );
 };
 
