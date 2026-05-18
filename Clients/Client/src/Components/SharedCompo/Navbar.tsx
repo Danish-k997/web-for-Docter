@@ -92,9 +92,9 @@ const Navbar = () => {
   const scrollToSection = (target: HomeSectionName) => {
     setActiveSection(target);
     closeMobileMenu();
-    window.requestAnimationFrame(() => {
+    window.setTimeout(() => {
       scrollToHomeSection(target);
-    });
+    }, 0);
   };
 
   const handleSetActiveSection = (target: string) => {
@@ -164,6 +164,9 @@ const Navbar = () => {
         onClick={() => {
           setActiveSection(link.target);
           closeMobileMenu();
+          window.setTimeout(() => {
+            scrollToHomeSection(link.target);
+          }, 0);
         }}
         onSetActive={handleSetActiveSection}
         className={`${className} ${

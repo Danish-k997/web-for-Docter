@@ -10,6 +10,7 @@ export const scrollToHomeSection = (target: HomeSectionName) => {
   const section = document.getElementById(target);
   if (!section) return;
 
+  const initialScrollY = window.scrollY;
   const sectionTop =
     section.getBoundingClientRect().top + window.scrollY + NAVBAR_SCROLL_OFFSET;
 
@@ -17,4 +18,15 @@ export const scrollToHomeSection = (target: HomeSectionName) => {
     duration: SCROLL_DURATION,
     smooth: SCROLL_SMOOTH_EASING,
   });
+
+  window.setTimeout(() => {
+    if (Math.abs(window.scrollY - initialScrollY) > 2) return;
+
+    if (typeof section.scrollIntoView === "function") {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    window.location.hash = target;
+  }, 120);
 };

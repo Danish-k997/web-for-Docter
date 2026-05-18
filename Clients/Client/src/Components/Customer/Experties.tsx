@@ -32,7 +32,7 @@ const Expertise = () => {
     <Element
       name={HOME_SECTIONS.expertise}
       id={HOME_SECTIONS.expertise}
-      className="py-20 bg-[#f8faf9] relative"
+      className="scroll-mt-[88px] py-20 bg-[#f8faf9] relative"
     >
       <div className="container mx-auto px-6">
         

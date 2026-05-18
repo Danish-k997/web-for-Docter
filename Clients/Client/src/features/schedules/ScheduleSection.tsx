@@ -45,7 +45,7 @@ const ScheduleSection = () => {
     <Element
       name={HOME_SECTIONS.schedule}
       id={HOME_SECTIONS.schedule}
-      className="bg-slate-50 py-14 text-slate-950 sm:py-16"
+      className="scroll-mt-[88px] bg-slate-50 py-14 text-slate-950 sm:py-16"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-7">
