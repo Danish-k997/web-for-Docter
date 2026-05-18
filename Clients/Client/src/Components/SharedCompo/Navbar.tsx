@@ -5,7 +5,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { Link as ScrollLink } from "react-scroll";
+import { Link as ScrollLink, scroller } from "react-scroll";
 import { UseAppSelector, UseAppDispatch } from "../../Serveces/Hook";
 import { logoutuser } from "../../Serveces/apiservices";
 import { LogOut } from "lucide-react";
@@ -88,6 +88,18 @@ const Navbar = () => {
     navigate("/", { state: { scrollTo: target } });
   };
 
+  const scrollToSection = (target: HomeSectionName) => {
+    setActiveSection(target);
+    closeMobileMenu();
+    window.requestAnimationFrame(() => {
+      scroller.scrollTo(target, {
+        smooth: SCROLL_SMOOTH_EASING,
+        duration: SCROLL_DURATION,
+        offset: NAVBAR_SCROLL_OFFSET,
+      });
+    });
+  };
+
   const handleSetActiveSection = (target: string) => {
     if (target === HOME_SECTIONS.expertise || target === HOME_SECTIONS.schedule) {
       setActiveSection(target);
@@ -122,6 +134,21 @@ const Navbar = () => {
           onClick={() => handleSectionRouteNavigation(link.target)}
           tabIndex={mobileTabIndex}
           className={`${className} text-left`}
+        >
+          {link.name}
+        </button>
+      );
+    }
+
+    if (mobile) {
+      return (
+        <button
+          type="button"
+          onClick={() => scrollToSection(link.target)}
+          tabIndex={mobileTabIndex}
+          className={`${className} text-left ${
+            activeSection === link.target ? activeNavLinkClass : ""
+          }`}
         >
           {link.name}
         </button>
