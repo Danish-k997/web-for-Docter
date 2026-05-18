@@ -6,6 +6,7 @@ export type DashboardNavItem = {
   label: string;
   to: string;
   icon: LucideIcon;
+  end?: boolean;
 };
 
 type DashboardSidebarProps = {
@@ -30,6 +31,7 @@ const DashboardSidebar = memo(({ items }: DashboardSidebarProps) => {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.end}
               className={({ isActive }) =>
                 [
                   "inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition",

@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Search,
   UserRound,
+  CalendarPlus,
 } from "lucide-react";
 import {
   getAllReports,
@@ -26,6 +27,7 @@ type PatientCardProps = {
   report: ReportItem;
   onSelect: (report: ReportItem) => void;
 };
+
 
 const formatDate = (value: string) => {
   const date = new Date(value);
@@ -111,6 +113,12 @@ const dashboardNavItems: DashboardNavItem[] = [
     label: "Reports",
     to: "/dashboard",
     icon: LayoutDashboard,
+    end: true,
+  },
+  {
+    label: "Add Schedule",
+    to: "/dashboard/add-schedule",
+    icon: CalendarPlus,
   },
   {
     label: "My Reports",

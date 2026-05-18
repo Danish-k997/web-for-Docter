@@ -12,6 +12,7 @@ import Login from "./Pages/Auth/Login.tsx";
 import Myreport from "./Pages/Myreport/Myreport.tsx";
 import Addreport from "./Pages/Myreport/Addreport.tsx";
 import Dashbord from "./Pages/Myreport/Dashbord.tsx";
+import AddSchedule from "./Pages/Myreport/AddSchedule.tsx";
 import Sppiner from "./Components/SharedCompo/Sppiner.tsx";
 
 function App() {
@@ -22,7 +23,7 @@ function App() {
     pathname === "/signup" ||
     pathname === "/login" ||
     pathname === "/verify-otp" ||
-    pathname === "/dashboard";
+    pathname.startsWith("/dashboard");
 
   const { isInitialized } = UseAppSelector((state) => state.auth);
 
@@ -53,6 +54,7 @@ function App() {
           </Route>
           <Route element={<ProtectedRouter allowedRoles={["admin"]} />}>
             <Route path="/dashboard" element={<Dashbord />} />
+            <Route path="/dashboard/add-schedule" element={<AddSchedule />} />
           </Route>
         </Routes>
       </main>

@@ -2,6 +2,7 @@
 import Hero from "../../Components/Customer/Hero";
 import QualificationSection from "../../Components/Customer/Qulifaction";
 import Experties from "../../Components/Customer/Experties";
+import ScheduleSection from "../../features/schedules/ScheduleSection";
 
 const Home = () => {
   return (
@@ -9,6 +10,7 @@ const Home = () => {
      <Hero/>
      <QualificationSection/>
       <Experties />
+     <ScheduleSection />
     </div>
   )
 };
