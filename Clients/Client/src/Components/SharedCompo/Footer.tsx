@@ -1,5 +1,5 @@
 const LINKEDIN_URL = "https://www.linkedin.com/in/dr-ayushi-sinha-b578b2191/";
- 
+
 const Footer = () => {
   return (
     <footer className="border-t border-slate-200 bg-slate-950 text-white">
@@ -12,16 +12,17 @@ const Footer = () => {
             Dr. Ayushi Sinha
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">
-            A modern digital healthcare experience built around clarity,
-            trust, and accessible patient support.
+            A modern digital healthcare experience built around clarity, trust,
+            and accessible patient support.
           </p>
         </div>
 
         <div className="flex flex-col gap-4 md:items-end">
-          <a    
+          <a
             href={LINKEDIN_URL}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
+            aria-label="Visit LinkedIn profile"
             className="inline-flex min-h-11 w-fit items-center gap-3 rounded-xl border border-teal-300/30 bg-white/5 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:border-teal-300 hover:bg-teal-400/10 hover:text-teal-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-300"
           >
             <svg
