@@ -9,28 +9,15 @@ const app = express();
                   
 app.use(express.json());
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allowed origins list
-    const allowedOrigins = [
-      process.env.FORTEND_URL,       
-      "https://web-for-docter-danish-khans-projects-32cebd46.vercel.app"
-    ].filter(Boolean); 
-
-    // Allow Postman/server-to-server calls (no origin)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log("Blocked by CORS:", origin); // debug ke liye
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: process.env.FORTEND_URL,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// OPTIONS preflight ke liye zaroori hai
-app.options("*", cors());
+// Express 5 ke liye naya syntax:
+app.options("/{*path}", cors());  // ✅
+
 app.use(cookieParser());
 
 
