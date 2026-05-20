@@ -9,7 +9,19 @@ const app = express();
                   
 app.use(express.json());
 app.use(cors({
-  origin: process.env.FORTEND_URL,
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      "https://web-for-docter.vercel.app",
+      "https://web-for-docter-danish-khans-projects-32cebd46.vercel.app",
+      "https://web-for-docter-git-main-danish-khans-projects-32cebd46.vercel.app",
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS blocked: " + origin));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
