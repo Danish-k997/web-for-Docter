@@ -27,8 +27,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// Express 5 ke liye naya syntax:
-app.options("/{*path}", cors());  // ✅
+
 
 app.use(cookieParser());
 
